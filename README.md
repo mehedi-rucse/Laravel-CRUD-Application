@@ -1,67 +1,64 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Web Engineering Final Task Documentation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+1. Create a laravel project with the  following command:
+    php artisan create-project laravel/laravel project-name
 
-## About Laravel
+2. Configure the .env file such as renaming the database name, if the key is not generated, use the following command:
+    php artisan key:generate
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+3. Now migrate  the initial migration provided with the laravel project:
+    php artisan migrate
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+4. Now create a Model for example Book with the following command:
+    php artisan make:model Book
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+5. Now create the controller BookController associated  with the Book model by the following command
+    php artisan make:controller BookController –model=Book
 
-## Learning Laravel
+6. Now create a migration for the books table which is associated with the Book Model by default.
+    php artisan make:migration create_books_table
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+7. Now configure the migration file as the table schema is defined such as:
+    Schema::create('books', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('title');
+                    $table->string('author');
+                    $table->string('isbn');
+                    $table->float('price');
+                    $table->integer('available');
+                    $table->timestamps();
+            });
+8. Now migrate  the create_books_table migration provided with the laravel project:
+    php artisan migrate
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+9. Now we have to define the route in which we want to see the book list, by configuring the routes/web.php file.
+   use App\Http\Controllers\BookController;
+   Route::get('/books',[BookController::class, 'index'])->name('books.index');
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+10. Now we have to configure the index function of the BookController class for showcasing all the book lists.
+11. Now there is no data in the books table, we have to use a factory and seeder to auto generate some data using the faker package.  
+    a. For the factory, use the following command: 
+            php artisan make:factory BookFactory --model=Book
 
-## Laravel Sponsors
+    b. Then define the faker properties in the definition function:
+    return [
+                'title' => fake()->name(),
+                'author' => fake()->unique()->name(),
+                'isbn' => fake()->isbn13(),
+                'price' => fake()->randomFloat(2, 10, 1000), // (no. of digits, min. max)
+                'available' => fake()->numberBetween(0,10),
+            ];
+    c. Then  create a seeder such as BookSeeder:
+            php artisan make:seeder BookSeeder
+            \App\Models\Book::factory(100)->create();
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+    d. Call the BookSeeder class from the DatabaseSeeder class:
+    $this->call(BookSeeder::class);
 
-### Premium Partners
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+    e. Now run the seeder with the following command:
+    php artisan db:seed
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# Laravel-CRUD-Application
+12. Configure the App\Providers\appServiceProvider class to enable bootstrap pagination:
+    \Illuminate\Pagination\Paginator::useBootstrap();
+    Use books->links() to implement it after the table.
